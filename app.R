@@ -11,7 +11,8 @@ library(shiny)
 hetdata <- read.csv("Bayesian Priors WebTech.csv")
 
 ##########
-#   UI   #
+#   UI  
+#
 ##########
 
 ui <- fluidPage( #####
