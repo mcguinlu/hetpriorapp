@@ -11,44 +11,45 @@ library(shiny)
 hetdata <- read.csv("Bayesian Priors WebTech.csv")
 
 ##########
-#   UI  
-#
+#   UI   #
 ##########
 
 ui <- fluidPage( #####
     titlePanel(h1("Heterogeneity Prior for Bayesian Meta-Analysis", align = "center"),windowTitle = "hetprior"),
     navbarPage("",
                theme = shinythemes::shinytheme("flatly"),
-               # tabPanel("Home",
-               #        sidebarLayout(
-               #            sidebarPanel(
-               #              br(),
-               #              h2("Installation"),
-               #              p(em("hetprior")," is available on github, so you can install it using the commands below from your R console:"),
-               #              code('install.packages("hetprior")'),
+                tabPanel("Home",
+                       sidebarLayout(
+                          sidebarPanel(
+                            br(),
+                            h4("Quick Guide"),
+                            p("Use the ", em("Look-up"), "tab to quickly find the details of your required distribution."),
+                            p("Use the ", em("Explore"), "tab to browse the complete database of prior distribtuions."),
+                            br(),
+                            h4("Development"),
+                            p("This app was developed by the ",
+                              a("Bristol Appraisal & Review of Reserach (BARR)",
+                                     href = "https://bristol.ac.uk/population-health-sciences/centres/cresyda/barr/"),
+                              " group. Team member details can be found in the ",
+                              em("Acknowledgements"), "
+                              section.")
+                          ),
+                       
+                            mainPanel(
+                            h2("Introducing", em("hetprior")),
+                            h3("Background"),
+                            p(em("hetprior")," is a new suite of tools from the BARR group at the University of Bristol",
+                            "which makes it easy to look-up an informative heterogeneity prior to inform your own Bayesian meta-analysis."),
                             # br(),
-                            # br(),
-                            # br(),
-                            # br(),
-                            # br(),
-               #              em("hetprior"), 
-               #              " is a product of MESI Labs"
-               #            ),
-               #        
-               #            mainPanel(
-               #              h1("Introducing", em("hetprior")),
-               #              p(em("hetprior")," is a new package from MESI Labs which makes it easy to look-up informative priors for your Bayesian meta-analysis."),
-               #              br(),
-               #              p("For an introduction more examples, visit the ",
-               #                a("Github account", 
-               #                  href = "https://github.com/mcguinlu")),
-               #              br(),
-               #              h2("Features"),
-               #              p("- "),
-               #              p("- ")
-               #                    )
-               #                    )
-               #        ),
+                            # p("For an introduction more examples, visit the ",
+                            #   a("Github account",
+                            #     href = "https://github.com/mcguinlu")),
+                            br(),
+                            h3("Features"),
+                            p("- ", em("Coming soon"))
+                                  )
+                                   )
+                       ),
              
              tabPanel("Look-up",
                       sidebarLayout(
@@ -57,7 +58,7 @@ ui <- fluidPage( #####
                                     sidebarPanel(
                                           width = 3,
                                           
-                                          p("Please complete the boxes below, or explore the complete dataset on the right."),
+                                          p("Please complete the boxes below."),
                                           p("Note: subsequent options are updated based on input."),
                                           
                                           selectizeInput("hetstat", label = "Heterogeneity statistic:",
@@ -72,7 +73,6 @@ ui <- fluidPage( #####
                                           uiOutput("natureoutcomeui"),
                                           uiOutput("actiondo1"),
                                           uiOutput("medicalareaui"),
-                                          
                                           uiOutput("samplesizeui"),
                                           uiOutput("actiondo2"), 
                                           br(),
@@ -82,24 +82,25 @@ ui <- fluidPage( #####
                                     
                                           ),
                                     
+                                    mainPanel(
                                     conditionalPanel(
                                       "output.buttonclick == '1'",
-
-                                          # DT::dataTableOutput("table_lookup"),
-                                          br(),
-                                          br(),
-                                          
-                                          p(em("Mean:"), textOutput("mean")), 
-                                          br(),
-                                          p(em("Standard deviation:"), textOutput("sd")),
-                                          br(),
-                                          p(em("Reference:"), textOutput("reference"))
+                                      width = 9, offset =3,
+                                          br(p(em("Mean:"), textOutput("mean"))), 
+                                          br(p(em("Standard deviation:"), textOutput("sd"))),
+                                          uiOutput("medianui"),
+                                          uiOutput("lowquantui"),
+                                          uiOutput("highquantui"),
+                                          uiOutput("notes1ui"),
+                                          uiOutput("notes2ui"),
+                                          br(p(em("Reference:"), textOutput("reference"))),
                                           # will need to move this to the server and replace with a uiOuput
                                           # because we need to seperate Mean/SD vs Shape/Rate based on input$distributionform
+                                          br(),
+                                          p(em("Coming January 2019: Graphing of prior distributions . . . "))
                                           
-                                    
                                           )
-                        
+                                    )
                                     )
                       ),
                       
@@ -118,7 +119,7 @@ ui <- fluidPage( #####
                                               unique(as.character(hetdata$Data.Type))))),
                         column(2,
                                selectInput("effectmeasure_e",
-                                           "Effect Measure:",
+                                           "Effect measure:",
                                            c("All",
                                              unique(as.character(hetdata$Effect.Measure))))),
                         column(2,
@@ -133,7 +134,7 @@ ui <- fluidPage( #####
                                              unique(as.character(hetdata$Type.of.Intervention))))),
                         column(2,
                                selectInput("natureoutcome_e",
-                                           "Outcome Nature:",
+                                           "Outcome nature:",
                                            c("All",
                                              unique(as.character(hetdata$Nature.of.Outcome)))))
                         # column(2,
@@ -149,16 +150,67 @@ ui <- fluidPage( #####
                         
                         ),
                       
-                      
-                      fluidRow(column(9,offset = 2,DT::dataTableOutput("table_explore"))
+                      fluidRow(column(10, offset = 1,DT::dataTableOutput("table_explore"))
                                ) ),
              
-             tabPanel("References"
              
-                      ),
+             tabPanel("References",
+                      h3("References"),
+                      p("The data for this project came from a series of 5 papers. These are detailed below:"),
+                      br(),
+                      tags$ul(
+                        tags$li(p("Turner, Rebecca M., Jonathan Davey, Mike J. Clarke, Simon G. Thompson, and Julian PT Higgins.",
+                                  em("Predicting the extent of heterogeneity in meta-analysis, using empirical data from the Cochrane Database of Systematic Reviews. "),
+                                  "International Journal of Epidemiology 41, No. 3 (2012): 818-827. ",
+                                  a("Link",
+                                       href = "https://doi.org/10.1093/ije/dys041"))),
+                        br(),
+                        tags$li(p("Turner, Rebecca M., Dan Jackson, Yinghui Wei, Simon G. Thompson, and Julian PT Higgins.",
+                                  em("Predictive distributions for between-study heterogeneity and simple methods for their application in Bayesian meta-analysis. "),
+                                  "Statistics in Medicine 34, No. 6 (2015): 984-998. ",
+                                  a("Link",
+                                    href = "https://doi.org/10.1002/sim.6381"))),
+                        br(),
+                        tags$li(p("Rhodes, Kirsty M., Rebecca M. Turner, Ian R. White, Dan Jackson, David J. Spiegelhalter, and Julian PT Higgins.",
+                                  em("Implementing informative priors for heterogeneity in meta?analysis using meta-regression and pseudo data. "),
+                                  "Statistics in Medicine 35, No. 29 (2016): 5495-5511. ",
+                                  a("Link",
+                                    href = "https://doi.org/10.1002/sim.7090"))),
+                        br(),
+                        tags$li(p("Rhodes, Kirsty M., Rebecca M. Turner, and Julian PT Higgins. ",
+                                  em("Predictive distributions were developed for the extent of heterogeneity in meta-analyses of continuous outcome data. "),
+                                  "Journal of Clinical Epidemiology 68, no. 1 (2015): 52-60. ",
+                                  a("Link",
+                                    href = "https://doi.org/10.1016/j.jclinepi.2014.08.012"))),
+                        br(),
+                        tags$li(p("Rhodes, Kirsty M., Rebecca M. Turner, and Julian PT Higgins. ",
+                                  em("Empirical evidence about inconsistency among studies in a pair-wise meta-analysis. "),
+                                  "Research Synthesis Methods 7, No. 4 (2016): 346-370. ",
+                                  a("Link",
+                                    href = "https://doi.org/10.1002/jrsm.1193")))
+
+                        )),
              
-             tabPanel("Acknowledgements"
-             
+             tabPanel("About",
+                      h3("Acknowledgements"),
+                      p(strong(em("Coming soon. . ."))),
+                      
+                      h3("Development"),
+                      p(strong(em("Coming soon. . ."))),
+                      
+                      h3("Team"),
+                      p(strong(em("Coming soon. . ."))),
+                      
+                      h3("Resources"),
+                      p("This app was built using",
+                        a("Shiny", 
+                          href = "https://shiny.rstudio.com"),
+                        ", an R package that makes it easy to build interactive web apps straight from R. ",
+                        "Development was managed using RStudio and Github, and the code for this app can be found ",
+                        a("here", 
+                          href = ""),
+                        "."
+                        )
                       )
 
 )
@@ -395,9 +447,16 @@ observeEvent(input$do1, {
                        
         )
         v$buttonclick <- 1
-        v$sd <- v$data[1,10]
+        
         v$mean <- v$data[1,9]
-        v$reference <- v$data [1,17]
+        v$sd <- v$data[1,10]
+        v$median <- v$data[1,11]
+        v$lowquant <- v$data[1,12]
+        v$highquant <- v$data[1,13]
+        v$notes1 <- v$data[1,14]
+        v$notes2 <- v$data[1,15]
+        
+        v$reference <- v$data [1,16]
         })
 
 observeEvent(input$do2, {
@@ -414,7 +473,12 @@ observeEvent(input$do2, {
         v$buttonclick <- 1
         v$mean <- v$data[1,9]
         v$sd <- v$data[1,10]
-        v$reference <- v$data [1,17]
+        v$median <- v$data[1,11]
+        v$lowquant <- v$data[1,12]
+        v$highquant <- v$data[1,13]
+        v$notes1 <- v$data[1,14]
+        v$notes2 <- v$data[1,15]
+        v$reference <- v$data [1,16]
         })
 
 observeEvent(input$clear, {
@@ -423,6 +487,12 @@ observeEvent(input$clear, {
   updateTextInput(session, "hetstat", value = "")
   v$mean <- NULL
   v$sd <- NULL
+  v$median <- NULL
+  v$lowquant <- NULL
+  v$highquant <- NULL
+  v$notes1 <- NULL
+  v$notes2 <- NULL
+  
   v$reference <- NULL
 })
 
@@ -441,8 +511,52 @@ outputOptions(output, "buttonclick", suspendWhenHidden = FALSE)
 #Render Outputs
 output$mean <- renderText(v$mean)
 output$sd <- renderText(v$sd)
+output$median <- renderText(as.character(v$median))
 output$reference <- renderText(as.character(v$reference))
+output$lowquant <- renderText(as.character(v$lowquant))
+output$highquant <- renderText(as.character(v$highquant))
+output$notes1 <- renderText(as.character(v$notes1))
+output$notes2 <- renderText(as.character(v$notes2))
 
+ output$medianui <- 
+   renderUI({
+     if (is.null("median")){}else{
+       if (v$median != "None"){
+          br(p(em("Median:"), textOutput("median")))
+          
+      }}})
+ 
+ output$lowquantui <- 
+   renderUI({
+     if (is.null("lowquant")){}else{
+       if (v$lowquant != "None"){
+         br(p(em("2.5% Quantile:"), textOutput("lowquant")))
+         
+       }}})
+ 
+ output$highquantui <- 
+   renderUI({
+     if (is.null("highquant")){}else{
+       if (v$highquant != "None"){
+         br(p(em("97.5% Quantile:"), textOutput("highquant")))
+         
+       }}}) 
+ 
+ output$notes1ui <- 
+   renderUI({
+     if (is.null("notes1")){}else{
+       if (v$notes1 != "None"){
+         br(p(em("Notes:"), textOutput("notes1")))
+         
+       }}})
+ 
+ output$notes2ui <- 
+   renderUI({
+     if (is.null("notes2")){}else{
+       if (v$notes2 != "None"){
+         br(p(em("Further notes:"), textOutput("notes2")))
+         
+       }}})
 
 ###   TABLE GENERATION FOR EXPLORE   ###
 output$table_explore <- DT::renderDataTable(DT::datatable({
@@ -482,7 +596,12 @@ output$table_explore <- DT::renderDataTable(DT::datatable({
   data_e
   
   #data_output <- data_e[,1:8], 
-  },extensions = 'Responsive'))
+  },extensions = 'Responsive', 
+  options = list(
+    columnDefs = list(list(className = 'dt-center', targets = '_all')),
+    pageLength = 20,
+    lengthMenu = c(5, 10, 20, 50, 100)
+    )))
 }
 
 
