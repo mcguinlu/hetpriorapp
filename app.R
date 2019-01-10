@@ -15,8 +15,8 @@ hetdata <- read.csv("Bayesian Priors WebTech.csv")
 ##########
 
 ui <- fluidPage( #####
-    titlePanel(h1("Heterogeneity Prior for Bayesian Meta-Analysis", align = "center"),windowTitle = "hetprior"),
-    navbarPage("",
+    titlePanel(h2("Heterogeneity Priors for Bayesian Meta-Analysis", align = "center"),windowTitle = "hetprior"),
+    navbarPage(em("hetprior"),
                theme = shinythemes::shinytheme("flatly"),
                 tabPanel("Home",
                        sidebarLayout(
@@ -97,7 +97,7 @@ ui <- fluidPage( #####
                                           # will need to move this to the server and replace with a uiOuput
                                           # because we need to seperate Mean/SD vs Shape/Rate based on input$distributionform
                                           br(),
-                                          p(em("Coming January 2019: Graphing of prior distributions . . . "))
+                                          p(strong(em("Coming January 2019: Graphing of prior distributions . . . ")))
                                           
                                           )
                                     )
@@ -563,27 +563,27 @@ output$table_explore <- DT::renderDataTable(DT::datatable({
   
   data_e <- hetdata
   if (input$hetstat_e != "All") {
-    data_e <- hetdata[hetdata$Heterogeneity.statistic == input$hetstat_e,]
+    data_e <- hetdata[hetdata[,1] == input$hetstat_e,]
   }
   
   if (input$datatype_e != "All") {
-    data_e <- hetdata[hetdata$Data.Type == input$datatype_e,]
+    data_e <- hetdata[hetdata[,2] == input$datatype_e,]
   }
   
   if (input$effectmeasure_e != "All") {
-    data_e <- hetdata[hetdata$Effect.Measure == input$effectmeasure_e,]
+    data_e <- hetdata[hetdata[,3] == input$effectmeasure_e,]
   }
   
   if (input$distributionform_e != "All") {
-    data_e <- hetdata[hetdata$Distribution.form == input$distributionform_e,]
+    data_e <- hetdata[hetdata[,4] == input$distributionform_e,]
   }
   
   if (input$interventiontype_e != "All") {
-    data_e <- hetdata[hetdata$Type.of.Intervention == input$interventiontype_e,]
+    data_e <- hetdata[hetdata[,5] == input$interventiontype_e,]
   }
   
   if (input$natureoutcome_e != "All") {
-    data_e <- hetdata[hetdata$Nature.of.Outcome == input$natureoutcome_e,]
+    data_e <- hetdata[hetdata[,6] == input$natureoutcome_e,]
   }
   
   # if (input$medicalarea_e != "All") {
@@ -600,7 +600,25 @@ output$table_explore <- DT::renderDataTable(DT::datatable({
   options = list(
     columnDefs = list(list(className = 'dt-center', targets = '_all')),
     pageLength = 20,
-    lengthMenu = c(5, 10, 20, 50, 100)
+    lengthMenu = c(5, 10, 20, 50, 100),
+    columns = list(
+      list(title = 'ID'),
+      list(title = 'Heterogeneity statistic'),
+      list(title = 'Data type'),
+      list(title = 'Effect measure'),
+      list(title = 'Distribution form'),
+      list(title = 'Intervention type'),
+      list(title = 'Nature of outcome'),
+      list(title = 'Medical area'),
+      list(title = 'Average sample size'),
+      list(title = 'Mean/Shape'),
+      list(title = 'Standard deviation/Scale'),
+      list(title = 'Median'),
+      list(title = '2.5% Quantile'),
+      list(title = '97.5% Quantile'),
+      list(title = 'Notes'),
+      list(title = 'Further notes'),
+      list(title = 'Reference'))
     )))
 }
 
