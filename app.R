@@ -8,6 +8,8 @@
 #
 
 library(shiny)
+library(ggplot2)
+library(invgamma)
 hetdata <- read.csv("Bayesian Priors WebTech.csv")
 
 ##########
@@ -31,7 +33,7 @@ ui <- fluidPage( #####
                               a("Bristol Appraisal & Review of Reserach (BARR)",
                                      href = "https://bristol.ac.uk/population-health-sciences/centres/cresyda/barr/"),
                               " group. Team member details can be found in the ",
-                              em("Acknowledgements"), "
+                              em("About"), "
                               section.")
                           ),
                        
@@ -39,14 +41,14 @@ ui <- fluidPage( #####
                             h2("Introducing", em("hetprior")),
                             h3("Background"),
                             p(em("hetprior")," is a new suite of tools from the BARR group at the University of Bristol",
-                            "which makes it easy to look-up an informative heterogeneity prior to inform your own Bayesian meta-analysis."),
+                            "which makes it easy to look-up an informative heterogeneity prior for use in your own Bayesian meta-analysis.")
                             # br(),
                             # p("For an introduction more examples, visit the ",
                             #   a("Github account",
                             #     href = "https://github.com/mcguinlu")),
-                            br(),
-                            h3("Features"),
-                            p("- ", em("Coming soon"))
+                            # br(),
+                            # h3("Features"),
+                            # p("- ", em("To be completed. . . "))
                                   )
                                    )
                        ),
@@ -84,21 +86,23 @@ ui <- fluidPage( #####
                                     
                                     mainPanel(
                                     conditionalPanel(
-                                      "output.buttonclick == '1'",
-                                      width = 9, offset =3,
-                                          br(p(em("Mean:"), textOutput("mean"))), 
-                                          br(p(em("Standard deviation:"), textOutput("sd"))),
-                                          uiOutput("medianui"),
-                                          uiOutput("lowquantui"),
-                                          uiOutput("highquantui"),
+                                      "output.buttonclick == 1",
+                                         width = 9, offset =3,
+                                      fluidRow(
+                                          column(3, uiOutput("meanui")), 
+                                          column(3, uiOutput("sdui"))
+                                              ),
+                                      fluidRow(
+                                        column(3, uiOutput("medianui")),
+                                        column(3, uiOutput("lowquantui")),
+                                        column(3, uiOutput("highquantui"))
+                                              ),
                                           uiOutput("notes1ui"),
-                                          uiOutput("notes2ui"),
-                                          br(p(em("Reference:"), textOutput("reference"))),
+                                          uiOutput("plotui"),
+                                          br(p(em("Reference:"), textOutput("reference")))
                                           # will need to move this to the server and replace with a uiOuput
                                           # because we need to seperate Mean/SD vs Shape/Rate based on input$distributionform
-                                          br(),
-                                          p(strong(em("Coming January 2019: Graphing of prior distributions . . . ")))
-                                          
+
                                           )
                                     )
                                     )
@@ -137,17 +141,7 @@ ui <- fluidPage( #####
                                            "Outcome nature:",
                                            c("All",
                                              unique(as.character(hetdata$Nature.of.Outcome)))))
-                        # column(2,
-                        #        selectInput("medicalarea_e",
-                        #                    "Medical area:",
-                        #                    c("All",
-                        #                      unique(as.character(hetdata$Medical.area))))),
-                        # column(2,
-                        #        selectInput("samplesize_e",
-                        #                    "Average sample size:",
-                        #                    c("All",
-                        #                      unique(as.character(hetdata$Average.Sample.Size)))))
-                        
+
                         ),
                       
                       fluidRow(column(10, offset = 1,DT::dataTableOutput("table_explore"))
@@ -160,47 +154,43 @@ ui <- fluidPage( #####
                       br(),
                       tags$ul(
                         tags$li(p("Turner, Rebecca M., Jonathan Davey, Mike J. Clarke, Simon G. Thompson, and Julian PT Higgins.",
-                                  em("Predicting the extent of heterogeneity in meta-analysis, using empirical data from the Cochrane Database of Systematic Reviews. "),
-                                  "International Journal of Epidemiology 41, No. 3 (2012): 818-827. ",
-                                  a("Link",
-                                       href = "https://doi.org/10.1093/ije/dys041"))),
+                                  a(em("Predicting the extent of heterogeneity in meta-analysis, using empirical data from the Cochrane Database of Systematic Reviews. "),
+                                    href = "https://doi.org/10.1093/ije/dys041"),
+                                  "International Journal of Epidemiology 41, No. 3 (2012): 818-827. ")),
                         br(),
                         tags$li(p("Turner, Rebecca M., Dan Jackson, Yinghui Wei, Simon G. Thompson, and Julian PT Higgins.",
-                                  em("Predictive distributions for between-study heterogeneity and simple methods for their application in Bayesian meta-analysis. "),
-                                  "Statistics in Medicine 34, No. 6 (2015): 984-998. ",
-                                  a("Link",
-                                    href = "https://doi.org/10.1002/sim.6381"))),
+                                  a(em("Predictive distributions for between-study heterogeneity and simple methods for their application in Bayesian meta-analysis. "),
+                                    href = "https://doi.org/10.1002/sim.6381"),
+                                    "Statistics in Medicine 34, No. 6 (2015): 984-998. ")),
                         br(),
                         tags$li(p("Rhodes, Kirsty M., Rebecca M. Turner, Ian R. White, Dan Jackson, David J. Spiegelhalter, and Julian PT Higgins.",
-                                  em("Implementing informative priors for heterogeneity in meta?analysis using meta-regression and pseudo data. "),
-                                  "Statistics in Medicine 35, No. 29 (2016): 5495-5511. ",
-                                  a("Link",
-                                    href = "https://doi.org/10.1002/sim.7090"))),
+                                  a(em("Implementing informative priors for heterogeneity in meta?analysis using meta-regression and pseudo data. "),
+                                    href = "https://doi.org/10.1002/sim.7090"),
+                                  "Statistics in Medicine 35, No. 29 (2016): 5495-5511. ")),
                         br(),
                         tags$li(p("Rhodes, Kirsty M., Rebecca M. Turner, and Julian PT Higgins. ",
-                                  em("Predictive distributions were developed for the extent of heterogeneity in meta-analyses of continuous outcome data. "),
-                                  "Journal of Clinical Epidemiology 68, no. 1 (2015): 52-60. ",
-                                  a("Link",
-                                    href = "https://doi.org/10.1016/j.jclinepi.2014.08.012"))),
+                                  a(em("Predictive distributions were developed for the extent of heterogeneity in meta-analyses of continuous outcome data. "),
+                                    href = "https://doi.org/10.1016/j.jclinepi.2014.08.012"),
+                                  "Journal of Clinical Epidemiology 68, No. 1 (2015): 52-60. ")),
                         br(),
                         tags$li(p("Rhodes, Kirsty M., Rebecca M. Turner, and Julian PT Higgins. ",
-                                  em("Empirical evidence about inconsistency among studies in a pair-wise meta-analysis. "),
-                                  "Research Synthesis Methods 7, No. 4 (2016): 346-370. ",
-                                  a("Link",
-                                    href = "https://doi.org/10.1002/jrsm.1193")))
+                                  a(em("Empirical evidence about inconsistency among studies in a pair-wise meta-analysis. "),
+                                    href = "https://doi.org/10.1002/jrsm.1193"),
+                                  "Research Synthesis Methods 7, No. 4 (2016): 346-370. "))
 
                         )),
              
              tabPanel("About",
                       h3("Acknowledgements"),
-                      p(strong(em("Coming soon. . ."))),
-                      
-                      h3("Development"),
-                      p(strong(em("Coming soon. . ."))),
-                      
-                      h3("Team"),
-                      p(strong(em("Coming soon. . ."))),
-                      
+                      p("Prof. Julian Higgins conceived the idea for this web app, and it was developed and tested by Luke McGuinness.",
+                      "Dr. Rebecca Turner & Dr. Kirsty Rhodes,",
+                      "the primary authors of the publications which provided the data used in this app,",
+                      "were involved from an early stage and provided useful clarification and guidance.",
+                      "Dr. José Lopez-Lopez provided guidance on constructing the distribution plots, while",
+                      "Ciara Gardiner and Gary Smith consulted on the design and implementation of the app itself."),
+                      p("For all enquires related to this project, please contact ", 
+                        a("Luke McGuinness", href = "mailto:luke.mcguinness@bristol.ac.uk"),"."),
+                    
                       h3("Resources"),
                       p("This app was built using",
                         a("Shiny", 
@@ -208,7 +198,7 @@ ui <- fluidPage( #####
                         ", an R package that makes it easy to build interactive web apps straight from R. ",
                         "Development was managed using RStudio and Github, and the code for this app can be found ",
                         a("here", 
-                          href = ""),
+                          href = "https://github.com/mcguinlu/hetpriorapp"),
                         "."
                         )
                       )
@@ -229,17 +219,20 @@ server <- function(input, output, session) {#####
   
    
   observeEvent(input$hetstat,{
+    v$buttonclick <- 0
     updateSelectInput(session,'datatype',
                       choices = c("", unique(as.character(hetdata$Data.Type[hetdata$Heterogeneity.statistic==input$hetstat]))))
   })
   
   observeEvent(input$datatype,{
+    v$buttonclick <- 0
     updateSelectInput(session,'effectmeasure',
                       choices = c("", unique(as.character(hetdata$Effect.Measure[hetdata$Heterogeneity.statistic==input$hetstat & 
                                                                                  hetdata$Data.Type==input$datatype]))))
   })
   
   observeEvent(input$effectmeasure,{
+    v$buttonclick <- 0
     updateSelectInput(session,'distributionform',
                       choices = c("", unique(as.character(hetdata$Distribution.form[hetdata$Heterogeneity.statistic==input$hetstat & 
                                                                                    hetdata$Data.Type==input$datatype &
@@ -247,6 +240,7 @@ server <- function(input, output, session) {#####
   })
   
   observeEvent(input$distributionform,{
+    v$buttonclick <- 0
     updateSelectInput(session,'interventiontype',
                       choices = c("", unique(as.character(hetdata$Type.of.Intervention[hetdata$Heterogeneity.statistic==input$hetstat & 
                                                                                        hetdata$Data.Type==input$datatype &
@@ -255,6 +249,7 @@ server <- function(input, output, session) {#####
   })
   
   observeEvent(input$interventiontype,{
+    v$buttonclick <- 0
     updateSelectInput(session,'natureoutcome',
                       choices = c("", unique(as.character(hetdata$Nature.of.Outcome[hetdata$Heterogeneity.statistic==input$hetstat & 
                                                                                       hetdata$Data.Type==input$datatype &
@@ -264,6 +259,7 @@ server <- function(input, output, session) {#####
   })
   
   observeEvent(input$natureoutcome,{
+    v$buttonclick <- 0
     updateSelectInput(session,'medicalarea',
                       choices = c("", unique(as.character(hetdata$Medical.area[hetdata$Heterogeneity.statistic==input$hetstat & 
                                                                                       hetdata$Data.Type==input$datatype &
@@ -275,6 +271,7 @@ server <- function(input, output, session) {#####
   })  
   
   observeEvent(input$medicalarea,{
+    v$buttonclick <- 0
     updateSelectInput(session,'samplesize',
                       choices = c("", unique(as.character(hetdata$Average.Sample.Size[hetdata$Heterogeneity.statistic==input$hetstat & 
                                                                                  hetdata$Data.Type==input$datatype &
@@ -448,16 +445,16 @@ observeEvent(input$do1, {
         )
         v$buttonclick <- 1
         
-        v$mean <- v$data[1,9]
-        v$sd <- v$data[1,10]
+        v$mean <- as.numeric(v$data[1,9])
+        v$sd <- as.numeric(v$data[1,10])
         v$median <- v$data[1,11]
         v$lowquant <- v$data[1,12]
         v$highquant <- v$data[1,13]
         v$notes1 <- v$data[1,14]
-        v$notes2 <- v$data[1,15]
-        
-        v$reference <- v$data [1,16]
-        })
+        v$reference <- v$data [1,15]
+        v$datlognormal <- data.frame(hetprior1 = rlnorm(10000, mean = v$mean, sd = v$sd))
+        v$datinvgamma <- data.frame(hetprior2 = rinvgamma(10000, v$mean, v$sd))
+})
 
 observeEvent(input$do2, {
         v$data <- subset(hetdata,
@@ -471,14 +468,16 @@ observeEvent(input$do2, {
                    Average.Sample.Size==input$samplesize
                    )
         v$buttonclick <- 1
-        v$mean <- v$data[1,9]
-        v$sd <- v$data[1,10]
+        v$mean <- as.numeric(v$data[1,9])
+        v$sd <- as.numeric(v$data[1,10])
         v$median <- v$data[1,11]
         v$lowquant <- v$data[1,12]
         v$highquant <- v$data[1,13]
         v$notes1 <- v$data[1,14]
-        v$notes2 <- v$data[1,15]
-        v$reference <- v$data [1,16]
+        v$reference <- v$data [1,15]
+        v$datlognormal <- data.frame(hetprior1 = rlnorm(10000, mean = v$mean, sd = v$sd))
+        v$datinvgamma <- data.frame(hetprior2 = rinvgamma(10000, v$mean, v$sd))
+        
         })
 
 observeEvent(input$clear, {
@@ -491,8 +490,6 @@ observeEvent(input$clear, {
   v$lowquant <- NULL
   v$highquant <- NULL
   v$notes1 <- NULL
-  v$notes2 <- NULL
-  
   v$reference <- NULL
 })
 
@@ -516,11 +513,27 @@ output$reference <- renderText(as.character(v$reference))
 output$lowquant <- renderText(as.character(v$lowquant))
 output$highquant <- renderText(as.character(v$highquant))
 output$notes1 <- renderText(as.character(v$notes1))
-output$notes2 <- renderText(as.character(v$notes2))
+
+
+output$meanui <- 
+  renderUI({
+    if (input$distributionform == "Inverse gamma"){
+      br(p(em("Shape:"), textOutput("mean")))
+    }else{
+      br(p(em("Mean:"), textOutput("mean")))
+    }})
+
+output$sdui <- 
+  renderUI({
+    if (input$distributionform == "Inverse gamma"){
+      br(p(em("Scale:"), textOutput("sd")))
+    }else{
+      br(p(em("Standard deviation:"), textOutput("sd")))
+    }})
 
  output$medianui <- 
    renderUI({
-     if (is.null("median")){}else{
+     if (is.null("median")){ }else{
        if (v$median != "None"){
           br(p(em("Median:"), textOutput("median")))
           
@@ -528,7 +541,7 @@ output$notes2 <- renderText(as.character(v$notes2))
  
  output$lowquantui <- 
    renderUI({
-     if (is.null("lowquant")){}else{
+     if (is.null("lowquant")){ }else{
        if (v$lowquant != "None"){
          br(p(em("2.5% Quantile:"), textOutput("lowquant")))
          
@@ -536,7 +549,7 @@ output$notes2 <- renderText(as.character(v$notes2))
  
  output$highquantui <- 
    renderUI({
-     if (is.null("highquant")){}else{
+     if (is.null("highquant")){ }else{
        if (v$highquant != "None"){
          br(p(em("97.5% Quantile:"), textOutput("highquant")))
          
@@ -544,20 +557,36 @@ output$notes2 <- renderText(as.character(v$notes2))
  
  output$notes1ui <- 
    renderUI({
-     if (is.null("notes1")){}else{
-       if (v$notes1 != "None"){
+     if (is.null("notes1")){ }else{
+       if (v$notes1 != "None "){
          br(p(em("Notes:"), textOutput("notes1")))
          
        }}})
  
- output$notes2ui <- 
-   renderUI({
-     if (is.null("notes2")){}else{
-       if (v$notes2 != "None"){
-         br(p(em("Further notes:"), textOutput("notes2")))
-         
-       }}})
+ 
+output$plot <- renderPlot({
+if(input$distributionform == "Log normal"){ 
+    ggplot(v$datlognormal, aes(x=hetprior1)) +
+    geom_density(color = "black", fill = "lightsteelblue3") +
+    xlim(0, 1) +
+    labs(x = input$hetstat, y = "Density")
+}else{
+    if(input$distributionform == "Inverse gamma"){ 
+        ggplot(v$datinvgamma, aes(x=hetprior2)) +
+        geom_density(color = "black", fill = "lightsteelblue3") +
+        xlim(0, 1)+
+        labs(x = input$hetstat, y = "Density")}}
+}) 
 
+ 
+output$plotui <- renderUI({
+   br(p(em("Plot:", plotOutput("plot"))))
+   })
+
+
+
+ 
+ 
 ###   TABLE GENERATION FOR EXPLORE   ###
 output$table_explore <- DT::renderDataTable(DT::datatable({
   
@@ -586,16 +615,8 @@ output$table_explore <- DT::renderDataTable(DT::datatable({
     data_e <- hetdata[hetdata[,6] == input$natureoutcome_e,]
   }
   
-  # if (input$medicalarea_e != "All") {
-  #   data_e <- hetdata[hetdata$Medical.area == input$medicalarea_e,]
-  # }
-  # 
-  # if (input$samplesize_e != "All") {
-  #   data_e <- hetdata[hetdata$Distribution.form == input$samplesize_e,]
-  # }
   data_e
   
-  #data_output <- data_e[,1:8], 
   },extensions = 'Responsive', 
   options = list(
     columnDefs = list(list(className = 'dt-center', targets = '_all')),
@@ -617,9 +638,11 @@ output$table_explore <- DT::renderDataTable(DT::datatable({
       list(title = '2.5% Quantile'),
       list(title = '97.5% Quantile'),
       list(title = 'Notes'),
-      list(title = 'Further notes'),
       list(title = 'Reference'))
     )))
+
+
+
 }
 
 
